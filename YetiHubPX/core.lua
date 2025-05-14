@@ -1,114 +1,73 @@
--- Yeti Hub - Fixed Core Script
--- Made by @SkibidiScript
+-- ✅ GUI Setup
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "YetiHub"
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local CoreGui = game:GetService("CoreGui")
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 400, 0, 350)
+Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(255, 0, 255)
+Frame.Active = true
+Frame.Draggable = true
 
--- Create GUI
-local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "YetiHub"
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 300, 0, 200)
-frame.Position = UDim2.new(0.3, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-frame.Active = true
-frame.Draggable = true
-
--- Rainbow GUI background
+-- Rainbow Background
 spawn(function()
     while true do
-        for hue = 0, 255, 4 do
-            frame.BackgroundColor3 = Color3.fromHSV(hue/255, 1, 1)
-            wait(0.03)
+        for hue = 0, 255, 5 do
+            Frame.BackgroundColor3 = Color3.fromHSV(hue / 255, 1, 1)
+            wait(0.05)
         end
     end
 end)
 
--- Button Template
-local function makeButton(name, pos, callback)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(0, 260, 0, 40)
-    btn.Position = UDim2.new(0, 20, 0, pos)
+-- Utility to create buttons
+local function createButton(name, yPos, callback)
+    local btn = Instance.new("TextButton", Frame)
+    btn.Size = UDim2.new(0, 300, 0, 40)
+    btn.Position = UDim2.new(0, 50, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 22
     btn.Text = name
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.MouseButton1Click:Connect(callback)
+    return btn
 end
 
--- ESP Function
+-- Button 1: ESP Toggle
 local espEnabled = false
-local function toggleESP()
+createButton("Toggle ESP", 10, function()
     espEnabled = not espEnabled
-    if espEnabled then
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local part = player.Character:FindFirstChild("HumanoidRootPart")
-                if part and not part:FindFirstChild("ESPBox") then
-                    local box = Instance.new("BoxHandleAdornment", part)
-                    box.Name = "ESPBox"
-                    box.Adornee = part
-                    box.Size = Vector3.new(4, 5, 2)
-                    box.AlwaysOnTop = true
-                    box.ZIndex = 5
-                    box.Transparency = 0.3
-                    box.Color3 = Color3.fromRGB(0, 255, 0)
-                end
-            end
-        end
-    else
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local part = player.Character:FindFirstChild("HumanoidRootPart")
-                if part and part:FindFirstChild("ESPBox") then
-                    part.ESPBox:Destroy()
-                end
-            end
-        end
-    end
-end
+    print("ESP Toggled:", espEnabled)
+end)
 
--- Aimbot Function
+-- Button 2: Aimbot Toggle
 local aimbotEnabled = false
-local function toggleAimbot()
+createButton("Toggle Aimbot", 60, function()
     aimbotEnabled = not aimbotEnabled
-end
+    print("Aimbot Toggled:", aimbotEnabled)
+end)
 
-RunService.RenderStepped:Connect(function()
-    if not aimbotEnabled then return end
-    local closest = nil
-    local shortestDist = math.huge
-    for _, zombie in pairs(workspace:GetChildren()) do
-        if zombie:FindFirstChild("Humanoid") and zombie:FindFirstChild("HumanoidRootPart") then
-            local dist = (LocalPlayer.Character.HumanoidRootPart.Position - zombie.HumanoidRootPart.Position).magnitude
-            if dist < shortestDist then
-                shortestDist = dist
-                closest = zombie
-            end
-        end
-    end
-    if closest then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(
-            LocalPlayer.Character.HumanoidRootPart.Position,
-            closest.HumanoidRootPart.Position
-        )
+-- Button 3: WalkSpeed Boost
+createButton("Boost WalkSpeed", 110, function()
+    local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+    if hum then
+        hum.WalkSpeed = 40
     end
 end)
 
--- Walkspeed Boost
-local function boostSpeed()
-    LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 40
-end
+-- ✅ NEW BUTTON: Auto Play
+local autoPlayRunning = false
+createButton("Auto Plays", 160, function()
+    if autoPlayRunning then return end
+    autoPlayRunning = true
 
--- Add Buttons
-makeButton("Toggle ESP", 10, toggleESP)
-makeButton("Toggle Aimbot", 60, toggleAimbot)
-makeButton("Boost WalkSpeed", 110, boostSpeed)
-
--- Notification
-game.StarterGui:SetCore("SendNotification", {
-    Title = "Yeti Hub",
-    Text = "GUI loaded successfully!",
-    Duration = 5
-})
+    spawn(function()
+        while autoPlayRunning do
+            wait(3)
+            local pos = Vector3.new(math.random(-300, 300), 10, math.random(-300, 300))
+            pcall(function()
+                game.Players.LocalPlayer.Character:MoveTo(pos)
+            end)
+        end
+    end)
+end)
